@@ -1,13 +1,22 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "governance-dashboard",
+  "main": "worker.js",
   "compatibility_date": "2026-09-17",
   "observability": {
     "enabled": true
   },
   "assets": {
     "directory": ".",
+    "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "governance-dashboard-db",
+      "database_id": "0f79c183-ba5e-47fc-8e86-c7204d16c3ce"
+    }
+  ]
 }
