@@ -1,1 +1,55 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Governance Dashboard | لوحة الحوكمة</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Arial,Tahoma,sans-serif;background:#fff}.bar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 4%;border-bottom:4px solid #4B1F6F;background:#fff}.brand{font-weight:700;color:#123B5D}.switch{display:flex;gap:8px}.switch button,.login button{border:1px solid #4B1F6F;background:#fff;color:#4B1F6F;padding:9px 16px;border-radius:8px;cursor:pointer;font-weight:700}.switch button.active,.login button{background:#4B1F6F;color:#fff}iframe{width:100%;height:calc(100vh - 64px);border:0;display:block}.login-screen{position:fixed;inset:0;z-index:9999;background:#fff;display:flex;align-items:center;justify-content:center;padding:24px}.login{width:min(430px,100%);border:1px solid #d8dce3;border-top:5px solid #4B1F6F;border-radius:16px;padding:30px;box-shadow:0 12px 40px #00000012;text-align:center}.login h1{margin:0 0 8px;color:#4B1F6F;font-size:27px}.login p{color:#123B5D;margin:0 0 24px}.login label{display:block;text-align:start;color:#123B5D;font-weight:700;margin:12px 0 6px}.login input{width:100%;padding:12px;border:1px solid #cfd6df;border-radius:9px;font:inherit}.login button{width:100%;margin-top:20px;padding:12px}.login-error{min-height:22px;color:#C62828;font-weight:700;margin-top:12px}.hidden{display:none!important}</style></head><body><div id="login-screen" class="login-screen"><form id="login-form" class="login"><h1 id="login-title">تسجيل الدخول</h1><p id="login-sub">لوحة حوكمة عمليات قطاع الأعمال</p><label id="user-label" for="username">اسم المستخدم</label><input id="username" autocomplete="username" required><label id="pass-label" for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required><button id="login-btn" type="submit">دخول</button><div id="login-error" class="login-error"></div></form></div><div id="dashboard" class="hidden"><div class="bar"><div class="brand" id="brand">لوحة حوكمة عمليات قطاع الأعمال</div><div class="switch"><button id="ar" class="active" onclick="setLang('ar')">العربية</button><button id="en" onclick="setLang('en')">English</button></div></div><iframe id="app" src="ar.html" title="Governance Dashboard"></iframe></div><script>const screen=document.getElementById('login-screen'),dashboard=document.getElementById('dashboard'),form=document.getElementById('login-form'),app=document.getElementById('app');function unlock(){screen.classList.add('hidden');dashboard.classList.remove('hidden')}if(sessionStorage.getItem('govAuthenticated')==='1')unlock();form.addEventListener('submit',e=>{e.preventDefault();const u=document.getElementById('username').value,p=document.getElementById('password').value;if(u==='Admin'&&p==='Admin'){sessionStorage.setItem('govAuthenticated','1');document.getElementById('login-error').textContent='';unlock()}else document.getElementById('login-error').textContent=document.documentElement.lang==='ar'?'اسم المستخدم أو كلمة المرور غير صحيحة':'Incorrect username or password'});app.addEventListener('load',()=>{try{const d=app.contentDocument;if(!d||d.getElementById('gov-enhancements'))return;const s=d.createElement('script');s.id='gov-enhancements';s.src='enhancements.js';d.body.appendChild(s)}catch(e){}});function setLang(l){document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';app.src=l==='ar'?'ar.html':'en.html';document.getElementById('brand').textContent=l==='ar'?'لوحة حوكمة عمليات قطاع الأعمال':'Business Sector Governance Operations Dashboard';document.getElementById('ar').classList.toggle('active',l==='ar');document.getElementById('en').classList.toggle('active',l==='en');localStorage.setItem('govLang',l)}setLang(localStorage.getItem('govLang')||'ar')</script></body></html>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Governance Dashboard EBU | لوحة الحوكمة</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Tahoma,sans-serif;background:#fff;color:#073765}
+:root{--navy:#073b7a;--purple:#51177c;--red:#f01938;--line:#d8dce3}
+.login-screen{position:fixed;inset:0;z-index:9999;background:#fff;overflow:auto}
+.login-lang{position:absolute;top:24px;right:32px;z-index:2;display:flex;gap:8px}
+[dir=rtl] .login-lang{right:auto;left:32px}
+.lang-btn{border:1px solid var(--purple);background:#fff;color:var(--purple);padding:9px 15px;border-radius:9px;font-weight:700;cursor:pointer}
+.lang-btn.active{background:var(--purple);color:#fff}
+.hero{min-height:43vh;display:grid;grid-template-columns:1fr 128px 1.35fr;align-items:center;max-width:1280px;margin:auto;padding:44px 50px 20px;direction:ltr}
+.stc{font-size:clamp(100px,15vw,210px);font-weight:900;letter-spacing:-18px;color:var(--purple);line-height:.8;text-align:center}
+.divider{height:43vh;min-height:270px;display:flex;justify-content:center}
+.divider i{display:block;width:42px;height:100%}.divider .navy{background:var(--navy)}.divider .purple{background:var(--purple)}
+.hero-copy{padding-left:46px;text-align:left;line-height:.92}
+.hero-copy div{font-weight:900;font-size:clamp(48px,6vw,86px);letter-spacing:-3px}.hero-copy .g{color:var(--navy)}.hero-copy .d{color:var(--purple)}.hero-copy .e{color:var(--red)}
+.login-wrap{padding:12px 20px 42px}
+.login{width:min(500px,100%);margin:auto;border:1px solid var(--line);border-top:5px solid var(--purple);border-radius:16px;padding:25px 34px 30px;box-shadow:0 12px 38px #00000010;background:#fff}
+.login h1{margin:0 0 5px;color:var(--purple);font-size:27px;text-align:center}.login p{text-align:center;margin:0 0 18px;color:var(--navy)}
+.login label{display:block;text-align:start;color:var(--navy);font-weight:700;margin:11px 0 6px}.login input{width:100%;padding:12px;border:1px solid #cfd6df;border-radius:9px;font:inherit;outline:none}.login input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #51177c14}
+.login button{width:100%;border:0;background:var(--purple);color:#fff;padding:13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:16px;margin-top:18px}
+.login-error{min-height:21px;color:#c62828;font-weight:700;text-align:center;margin-top:10px}
+.bar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 4%;border-bottom:4px solid var(--purple);background:#fff}.brand{font-weight:700;color:var(--navy)}.switch{display:flex;gap:8px}.switch button{border:1px solid var(--purple);background:#fff;color:var(--purple);padding:9px 16px;border-radius:8px;cursor:pointer;font-weight:700}.switch button.active{background:var(--purple);color:#fff}iframe{width:100%;height:calc(100vh - 64px);border:0;display:block}.hidden{display:none!important}
+@media(max-width:760px){.hero{grid-template-columns:1fr 28px 1.25fr;padding:75px 18px 10px;min-height:34vh}.stc{font-size:82px;letter-spacing:-9px}.divider{min-height:190px;height:28vh}.divider i{width:10px}.hero-copy{padding-left:15px}.hero-copy div{font-size:34px;letter-spacing:-1px}.login-lang{top:16px!important;right:16px!important;left:auto!important}.login{padding:22px}.login-wrap{padding-top:8px}}
+</style>
+</head>
+<body>
+<div id="login-screen" class="login-screen">
+  <div class="login-lang"><button id="login-ar" class="lang-btn active" type="button" onclick="setLoginLang('ar')">العربية</button><button id="login-en" class="lang-btn" type="button" onclick="setLoginLang('en')">English</button></div>
+  <section class="hero" aria-label="Governance Dashboard EBU">
+    <div class="stc">stc</div>
+    <div class="divider"><i class="navy"></i><i class="purple"></i></div>
+    <div class="hero-copy"><div class="g">Governance</div><div class="d">Dashboard</div><div class="e">EBU</div></div>
+  </section>
+  <div class="login-wrap"><form id="login-form" class="login">
+    <h1 id="login-title">تسجيل الدخول</h1><p id="login-sub">لوحة حوكمة عمليات قطاع الأعمال</p>
+    <label id="user-label" for="username">اسم المستخدم</label><input id="username" autocomplete="username" required>
+    <label id="pass-label" for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required>
+    <button id="login-btn" type="submit">دخول</button><div id="login-error" class="login-error"></div>
+  </form></div>
+</div>
+<div id="dashboard" class="hidden"><div class="bar"><div class="brand" id="brand">لوحة حوكمة عمليات قطاع الأعمال</div><div class="switch"><button id="ar" class="active" onclick="setLang('ar')">العربية</button><button id="en" onclick="setLang('en')">English</button></div></div><iframe id="app" src="ar.html" title="Governance Dashboard"></iframe></div>
+<script>
+const screen=document.getElementById('login-screen'),dashboard=document.getElementById('dashboard'),form=document.getElementById('login-form'),app=document.getElementById('app');
+function unlock(){screen.classList.add('hidden');dashboard.classList.remove('hidden')}
+if(sessionStorage.getItem('govAuthenticated')==='1')unlock();
+function setLoginLang(l){document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('login-title').textContent=l==='ar'?'تسجيل الدخول':'Sign In';document.getElementById('login-sub').textContent=l==='ar'?'لوحة حوكمة عمليات قطاع الأعمال':'Business Sector Governance Operations Dashboard';document.getElementById('user-label').textContent=l==='ar'?'اسم المستخدم':'Username';document.getElementById('pass-label').textContent=l==='ar'?'كلمة المرور':'Password';document.getElementById('login-btn').textContent=l==='ar'?'دخول':'Sign In';document.getElementById('login-ar').classList.toggle('active',l==='ar');document.getElementById('login-en').classList.toggle('active',l==='en');document.getElementById('login-error').textContent='';localStorage.setItem('govLoginLang',l)}
+form.addEventListener('submit',e=>{e.preventDefault();const u=document.getElementById('username').value,p=document.getElementById('password').value;if(u==='Admin'&&p==='Admin'){sessionStorage.setItem('govAuthenticated','1');document.getElementById('login-error').textContent='';unlock()}else document.getElementById('login-error').textContent=document.documentElement.lang==='ar'?'اسم المستخدم أو كلمة المرور غير صحيحة':'Incorrect username or password'});
+app.addEventListener('load',()=>{try{const d=app.contentDocument;if(!d||d.getElementById('gov-enhancements'))return;const s=d.createElement('script');s.id='gov-enhancements';s.src='enhancements.js';d.body.appendChild(s)}catch(e){}});
+function setLang(l){document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';app.src=l==='ar'?'ar.html':'en.html';document.getElementById('brand').textContent=l==='ar'?'لوحة حوكمة عمليات قطاع الأعمال':'Business Sector Governance Operations Dashboard';document.getElementById('ar').classList.toggle('active',l==='ar');document.getElementById('en').classList.toggle('active',l==='en');localStorage.setItem('govLang',l)}
+setLoginLang(localStorage.getItem('govLoginLang')||'ar');setLang(localStorage.getItem('govLang')||'ar');
+</script></body></html>
