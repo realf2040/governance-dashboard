@@ -13,16 +13,18 @@ async function api(url,opt={}){opt.headers={...(opt.headers||{}),'content-type':
 $('loginBtn').onclick=async()=>{try{const j=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:$('lu').value,password:$('lp').value})});if(j.user.role!=='superadmin')throw new Error('Super Admin only');current=j.user.username;sessionStorage.setItem('superUser',current);$('login').classList.add('hidden');$('dash').classList.remove('hidden');$('logout').classList.remove('hidden');load()}catch(e){$('loginMsg').textContent='بيانات الدخول غير صحيحة أو الحساب ليس Super Admin'}};
 $('logout').onclick=()=>{sessionStorage.removeItem('superUser');location.reload()};
 $('create').onclick=async()=>{try{await api('/api/users',{method:'POST',body:JSON.stringify({username:$('nu').value,password:$('np').value,role:$('nr').value})});$('nu').value='';$('np').value='';$('userMsg').textContent='تم إنشاء المستخدم';load()}catch(e){$('userMsg').textContent='تعذر إنشاء المستخدم: '+e.message}};
-async function reset(u){
+function reset(u){
  const ar=language==='ar';
- const p=prompt((ar?'أدخل كلمة المرور الجديدة للمستخدم ':'Enter a new password for ')+u);
- if(!p)return;
- const confirmPass=prompt((ar?'للتأكد، أعد كتابة كلمة المرور الجديدة. ستظهر أثناء الكتابة حتى تتمكن من مراجعتها.':'Confirm the new password. It will be visible while typing so you can review it.'));
- if(confirmPass===null)return;
- if(p!==confirmPass){alert(ar?'كلمتا المرور غير متطابقتين':'Passwords do not match');return}
- if(p.length<6){alert(ar?'استخدم 6 أحرف أو أرقام على الأقل':'Use at least 6 characters');return}
- try{await api('/api/users/reset-password',{method:'PUT',body:JSON.stringify({username:u,password:p})});alert(ar?'تم تغيير كلمة المرور بنجاح':'Password changed successfully');await load()}
- catch(e){alert((ar?'تعذر تغيير كلمة المرور: ':'Could not change password: ')+e.message)}
+ const overlay=document.createElement('div');
+ overlay.style.cssText='position:fixed;inset:0;background:#0006;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+ overlay.innerHTML='<div style="background:#fff;width:min(520px,100%);padding:26px;border-radius:16px;border-top:5px solid #542080;box-shadow:0 20px 60px #0003"><h3 style="margin-top:0;color:#542080">'+(ar?'تعيين كلمة مرور جديدة':'Set New Password')+'</h3><p>'+(ar?'المستخدم: ':'User: ')+esc(u)+'</p><label>'+(ar?'كلمة المرور الجديدة':'New password')+'</label><div style="position:relative"><input id="rp1" type="password" style="width:100%;padding:13px 52px 13px 13px;border:1px solid #ccd6e0;border-radius:9px;margin:7px 0 15px"><button id="rpeye" type="button" style="position:absolute;left:8px;top:12px;border:0;background:transparent;font-size:20px;cursor:pointer">👁</button></div><label>'+(ar?'تأكيد كلمة المرور':'Confirm password')+'</label><input id="rp2" type="password" style="width:100%;padding:13px;border:1px solid #ccd6e0;border-radius:9px;margin:7px 0 10px"><div id="rpmsg" style="min-height:24px;color:#d71920"></div><div style="display:flex;gap:10px"><button id="rpsave" class="btn primary">'+(ar?'حفظ':'Save')+'</button><button id="rpcancel" class="btn">'+(ar?'إلغاء':'Cancel')+'</button></div></div>';
+ document.body.appendChild(overlay);
+ const p1=overlay.querySelector('#rp1'),p2=overlay.querySelector('#rp2'),eye=overlay.querySelector('#rpeye'),msg=overlay.querySelector('#rpmsg');
+ eye.onclick=()=>{const show=p1.type==='password';p1.type=show?'text':'password';p2.type=show?'text':'password';eye.textContent=show?'🙈':'👁'};
+ overlay.querySelector('#rpcancel').onclick=()=>overlay.remove();
+ overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
+ overlay.querySelector('#rpsave').onclick=async()=>{const p=p1.value;if(p.length<6){msg.textContent=ar?'استخدم 6 أحرف أو أرقام على الأقل':'Use at least 6 characters';return}if(p!==p2.value){msg.textContent=ar?'كلمتا المرور غير متطابقتين':'Passwords do not match';return}try{await api('/api/users/reset-password',{method:'PUT',body:JSON.stringify({username:u,password:p})});overlay.remove();alert(ar?'تم تغيير كلمة المرور بنجاح':'Password changed successfully');await load()}catch(e){msg.textContent=(ar?'تعذر تغيير كلمة المرور: ':'Could not change password: ')+e.message}};
+ p1.focus();
 }
 async function toggle(u,a){await api('/api/users/status',{method:'PUT',body:JSON.stringify({username:u,active:a?0:1})});load()}
 async function removeUser(u){if(!confirm('هل تريد إلغاء المستخدم '+u+'؟'))return;await api('/api/users/'+encodeURIComponent(u),{method:'DELETE'});load()}
