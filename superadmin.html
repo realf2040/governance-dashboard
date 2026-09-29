@@ -13,7 +13,17 @@ async function api(url,opt={}){opt.headers={...(opt.headers||{}),'content-type':
 $('loginBtn').onclick=async()=>{try{const j=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:$('lu').value,password:$('lp').value})});if(j.user.role!=='superadmin')throw new Error('Super Admin only');current=j.user.username;sessionStorage.setItem('superUser',current);$('login').classList.add('hidden');$('dash').classList.remove('hidden');$('logout').classList.remove('hidden');load()}catch(e){$('loginMsg').textContent='بيانات الدخول غير صحيحة أو الحساب ليس Super Admin'}};
 $('logout').onclick=()=>{sessionStorage.removeItem('superUser');location.reload()};
 $('create').onclick=async()=>{try{await api('/api/users',{method:'POST',body:JSON.stringify({username:$('nu').value,password:$('np').value,role:$('nr').value})});$('nu').value='';$('np').value='';$('userMsg').textContent='تم إنشاء المستخدم';load()}catch(e){$('userMsg').textContent='تعذر إنشاء المستخدم: '+e.message}};
-async function reset(u){const p=prompt('أدخل كلمة المرور الجديدة للمستخدم '+u);if(!p)return;await api('/api/users/reset-password',{method:'PUT',body:JSON.stringify({username:u,password:p})});alert('تم تغيير كلمة المرور')}
+async function reset(u){
+ const ar=language==='ar';
+ const p=prompt((ar?'أدخل كلمة المرور الجديدة للمستخدم ':'Enter a new password for ')+u);
+ if(!p)return;
+ const confirmPass=prompt((ar?'للتأكد، أعد كتابة كلمة المرور الجديدة. ستظهر أثناء الكتابة حتى تتمكن من مراجعتها.':'Confirm the new password. It will be visible while typing so you can review it.'));
+ if(confirmPass===null)return;
+ if(p!==confirmPass){alert(ar?'كلمتا المرور غير متطابقتين':'Passwords do not match');return}
+ if(p.length<6){alert(ar?'استخدم 6 أحرف أو أرقام على الأقل':'Use at least 6 characters');return}
+ try{await api('/api/users/reset-password',{method:'PUT',body:JSON.stringify({username:u,password:p})});alert(ar?'تم تغيير كلمة المرور بنجاح':'Password changed successfully');await load()}
+ catch(e){alert((ar?'تعذر تغيير كلمة المرور: ':'Could not change password: ')+e.message)}
+}
 async function toggle(u,a){await api('/api/users/status',{method:'PUT',body:JSON.stringify({username:u,active:a?0:1})});load()}
 async function removeUser(u){if(!confirm('هل تريد إلغاء المستخدم '+u+'؟'))return;await api('/api/users/'+encodeURIComponent(u),{method:'DELETE'});load()}
 async function showUser(u){const j=await api('/api/user-activity?username='+encodeURIComponent(u));const logs=j.logs||[];$('userDetail').classList.remove('hidden');$('udTitle').textContent=(language==='ar'?'لوحة نشاط المستخدم: ':'User Activity Dashboard: ')+u;$('udLogins').textContent=logs.filter(x=>x.action==='LOGIN').length;$('udChanges').textContent=logs.filter(x=>['CREATE','UPDATE','DELETE'].includes(x.action)).length;$('udLast').textContent=logs[0]?.created_at||'—';$('udRows').innerHTML=logs.length?logs.map(x=>{const d=new Date((x.created_at||'').replace(' ','T')+'Z');return '<tr><td>'+esc(d.toLocaleDateString(language==='ar'?'ar-SA':'en-GB',{weekday:'long'}))+'</td><td>'+esc(x.created_at)+'</td><td>'+esc(x.action)+'</td><td class="small ltr">'+esc(x.details||'')+'</td></tr>'}).join(''):'<tr><td colspan="4">—</td></tr>';const days={};logs.forEach(x=>{const k=String(x.created_at||'').slice(0,10);if(k)days[k]=(days[k]||0)+1});const max=Math.max(1,...Object.values(days));$('udChart').innerHTML=Object.entries(days).sort().map(([d,n])=>'<div style="min-width:70px;text-align:center"><div style="height:'+Math.max(8,Math.round(n/max*125))+'px;background:#542080;border-radius:6px 6px 0 0"></div><b>'+n+'</b><div class="small">'+esc(d)+'</div></div>').join('');$('userDetail').scrollIntoView({behavior:'smooth'})}
