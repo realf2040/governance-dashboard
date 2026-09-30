@@ -20,7 +20,7 @@ async function employee(){
   const resBtn=document.createElement('button');resBtn.dataset.tab='myresults';resBtn.textContent=ar?'نتائجي':'My Results';nav.appendChild(resBtn);
   const mySec=document.createElement('section');mySec.id='mywork';mySec.className='tab';main.appendChild(mySec);
   const resSec=document.createElement('section');resSec.id='myresults';resSec.className='tab';main.appendChild(resSec);
-  const mine=()=>rows.filter(r=>String(r.savedBy||r.name).toLowerCase()===user.toLowerCase()||String(r.name).toLowerCase()===user.toLowerCase());
+  const mine=()=>records.filter(r=>String(r.savedBy||r.name).toLowerCase()===user.toLowerCase()||String(r.name).toLowerCase()===user.toLowerCase());
   const color=v=>v<70?'#C62828':v<90?'#F9A825':'#2E7D32';
   function drawMine(){const a=mine(),avg=k=>a.length?a.reduce((s,r)=>s+Number(r[k]||0),0)/a.length:0,q=avg('quality'),cs=avg('csat'),p=a.reduce((s,r)=>s+Number(r.prod||0),0);
    mySec.innerHTML='<div class="card"><h2>'+(ar?'أعمالي':'My Work')+'</h2><div class="dm-scroll"><table><thead><tr><th>'+(ar?'التاريخ':'Date')+'</th><th>'+(ar?'نوع العمل':'Work Type')+'</th><th>'+(ar?'الجودة':'Quality')+'</th><th>'+(ar?'رضا العملاء':'CSAT')+'</th><th>'+(ar?'الإنتاجية':'Productivity')+'</th></tr></thead><tbody>'+(a.length?a.map(r=>'<tr><td>'+esc(r.record_date||r.date||'—')+'</td><td>'+esc(L(S,r.service))+'</td><td>'+Number(r.quality||0).toFixed(1)+'%</td><td>'+Number(r.csat||0).toFixed(1)+'%</td><td>'+Number(r.prod||0)+'</td></tr>').join(''):'<tr><td colspan="5">'+T.empty+'</td></tr>')+'</tbody></table></div></div>';
