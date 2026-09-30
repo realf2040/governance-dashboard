@@ -14,7 +14,7 @@ async function employee(){
  const name=$('dm-name'),sup=$('dm-supervisor'),date=$('dm-record-date'),service=$('dm-service');if(name){name.value=user;name.readOnly=true}if(date&&!date.value)date.value=new Date().toISOString().slice(0,10);
  try{const u=await api('/api/users'),me=(u.users||[]).find(x=>String(x.username).toLowerCase()===user.toLowerCase());if(me&&sup){sup.value=me.supervisor_username||'';sup.readOnly=true}}catch(e){}
  const nav=document.querySelector('nav'),main=document.querySelector('main');if(nav&&main){
-  [...nav.querySelectorAll('button')].forEach(b=>{const k=b.dataset.tab||b.id||'';if(!['overview','data','gov-user-tools'].includes(k))b.hidden=true});
+  [...nav.querySelectorAll('button')].forEach(b=>{const k=b.dataset.tab||b.id||'';if(!['overview','data','gov-user-tools'].includes(k))b.style.display='none'});
   if(btn){btn.hidden=false;btn.textContent=ar?'تسجيل العمل':'Work Entry'}
   const myBtn=document.createElement('button');myBtn.dataset.tab='mywork';myBtn.textContent=ar?'أعمالي':'My Work';nav.appendChild(myBtn);
   const resBtn=document.createElement('button');resBtn.dataset.tab='myresults';resBtn.textContent=ar?'نتائجي':'My Results';nav.appendChild(resBtn);
@@ -28,7 +28,7 @@ async function employee(){
   }
   const open=s=>{document.querySelectorAll('nav button,.tab').forEach(x=>x.classList.remove('active'));document.querySelector('button[data-tab="'+s.id+'"]')?.classList.add('active');s.classList.add('active');if(s===mySec||s===resSec)drawMine()};myBtn.onclick=()=>open(mySec);resBtn.onclick=()=>open(resSec);window.addEventListener('governance:data-changed',drawMine);drawMine();
  }
- const enforceEmployeeNav=()=>{const allowed=new Set(['overview','data','mywork','myresults']);document.querySelectorAll('nav button').forEach(b=>{const k=b.dataset.tab||'';const acct=b.id==='gov-user-tools';b.style.display=(allowed.has(k)||acct)?'':'none';if(k==='data')b.textContent=ar?'تسجيل العمل':'Work Entry';if(acct)b.textContent=ar?'الحساب':'Account'});};enforceEmployeeNav();const navObserver=new MutationObserver(enforceEmployeeNav);navObserver.observe(document.querySelector('nav'),{childList:true});
+ const enforceEmployeeNav=()=>{const allowed=new Set(['overview','data','mywork','myresults']);document.querySelectorAll('nav button').forEach(b=>{const k=b.dataset.tab||'';const acct=b.id==='gov-user-tools';b.style.display=(allowed.has(k)||acct)?'':'none';if(k==='data')b.textContent=ar?'تسجيل العمل':'Work Entry';if(k==='mywork')b.textContent=ar?'أعمالي':'My Work';if(k==='myresults')b.textContent=ar?'نتائجي':'My Results';if(acct)b.textContent=ar?'الحساب':'Account'});};enforceEmployeeNav();const navObserver=new MutationObserver(()=>enforceEmployeeNav());navObserver.observe(document.querySelector('nav'),{childList:true,subtree:false});setTimeout(enforceEmployeeNav,100);setTimeout(enforceEmployeeNav,500);
  const h=document.querySelector('#dm-form-card h2');if(h)h.textContent=ar?'تسجيل العمل اليومي':'Daily Work Entry';
  const p=document.querySelector('#dm-form-card p');if(p)p.textContent=ar?'اختر نوع العمل الذي قمت به، وستظهر المدخلات الخاصة به فقط.':'Select the work completed; only the relevant fields will appear.';
  const grid=$('dm-specific')?.querySelector('.dm-grid');if(grid&&!$('emp-work-details')){const box=document.createElement('div');box.id='emp-work-details';box.style.gridColumn='1/-1';grid.prepend(box)}
