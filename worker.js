@@ -22,6 +22,11 @@ async function init(DB){
  try{await DB.prepare("ALTER TABLE governance_records ADD COLUMN notes TEXT DEFAULT ''").run()}catch(e){}
  try{await DB.prepare("ALTER TABLE governance_records ADD COLUMN service_metrics TEXT DEFAULT '{}'").run()}catch(e){}
  try{await DB.prepare("ALTER TABLE governance_users ADD COLUMN supervisor_username TEXT DEFAULT ''").run()}catch(e){}
+ // One-time compatible role migration for legacy accounts.
+ await DB.prepare("UPDATE governance_users SET role='supervisor',updated_at=CURRENT_TIMESTAMP WHERE role='admin'").run();
+ await DB.prepare("UPDATE governance_users SET role='employee',updated_at=CURRENT_TIMESTAMP WHERE role='user'").run();
+ // Preserve the existing pilot team relationship when both legacy accounts exist.
+ await DB.prepare("UPDATE governance_users SET supervisor_username='Admin',updated_at=CURRENT_TIMESTAMP WHERE username='fgodairy' COLLATE NOCASE AND role='employee' AND COALESCE(supervisor_username,'')='' AND EXISTS(SELECT 1 FROM governance_users WHERE username='Admin' COLLATE NOCASE AND role='supervisor')").run();
  await DB.prepare("CREATE TABLE IF NOT EXISTS governance_evaluations (id INTEGER PRIMARY KEY AUTOINCREMENT,supervisor_username TEXT NOT NULL,employee_username TEXT NOT NULL,score REAL NOT NULL,notes TEXT DEFAULT '',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
 }
 function row(r){return {id:r.id,name:r.employee_name,employee_name:r.employee_name,employee_id:r.employee_id||'',supervisor_name:r.supervisor_name||'',record_date:r.record_date||'',notes:r.notes||'',service_metrics:(()=>{try{return JSON.parse(r.service_metrics||'{}')}catch(e){return {}}})(),service:r.service,period:r.period,quality:r.quality,csat:r.csat,prod:r.productivity,productivity:r.productivity,date:r.updated_at,created_at:r.created_at,updated_at:r.updated_at,savedBy:r.saved_by||'Admin'};}
