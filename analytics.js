@@ -26,3 +26,18 @@ function install(){
 }
 install();window.addEventListener('governance:data-changed',()=>setTimeout(install,80));setInterval(install,4000);
 })();
+;(()=>{if(window.__govSupervisorDetailV3)return;window.__govSupervisorDetailV3=true;
+const ar=document.documentElement.lang==='ar';
+const $=id=>document.getElementById(id),safe=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const avg=(a,k)=>a.length?a.reduce((s,r)=>s+Number(r[k]||0),0)/a.length:0;
+const cls=v=>Number(v)<70?'gov-risk':Number(v)<90?'gov-normal':'gov-excellent';
+function rows(){try{return JSON.parse(localStorage.getItem('governanceRecordsV1')||'[]')}catch(e){return[]}}
+function install(){
+ if(!document.getElementById('gov-supervisor-v3-style')){const s=document.createElement('style');s.id='gov-supervisor-v3-style';s.textContent='.gov-risk{background:#fdeaea!important;color:#C62828!important;border-color:#C62828!important}.gov-normal{background:#fff8df!important;color:#9a6700!important;border-color:#F9A825!important}.gov-excellent{background:#eaf6ed!important;color:#2E7D32!important;border-color:#2E7D32!important}.gov-team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}.gov-team-kpi{padding:14px;border:1px solid #d8dce3;border-radius:12px}.gov-team-kpi b{display:block;font-size:24px;margin-top:5px}.gov-team-table td,.gov-team-table th{white-space:nowrap}@media(max-width:700px){.gov-team-grid{grid-template-columns:1fr}}';document.head.appendChild(s)}
+ const sec=$('supervisors');if(!sec)return;let host=sec.querySelector('.gov-supervisor-detail');if(!host){host=document.createElement('div');host.className='card gov-supervisor-detail';sec.appendChild(host)}
+ const data=rows(),groups={};data.forEach(r=>{const n=(r.supervisor_name||'').trim()||(ar?'غير محدد':'Unassigned');(groups[n]||(groups[n]=[])).push(r)});
+ const names=Object.keys(groups);
+ host.innerHTML='<h2>'+(ar?'تفاصيل المشرفين والموظفين':'Supervisor & Employee Details')+'</h2>'+(names.length?names.map(n=>{const a=groups[n],q=avg(a,'quality'),cs=avg(a,'csat');return '<div style="margin:18px 0;padding-top:12px;border-top:1px solid #ddd"><h3>'+safe(n)+'</h3><div class="gov-team-grid"><div class="gov-team-kpi '+cls(q)+'">'+(ar?'متوسط الجودة':'Average Quality')+'<b>'+q.toFixed(1)+'%</b></div><div class="gov-team-kpi '+cls(cs)+'">'+(ar?'رضا العملاء':'Customer Satisfaction')+'<b>'+cs.toFixed(1)+'%</b></div><div class="gov-team-kpi">'+(ar?'عدد سجلات الفريق':'Team Records')+'<b>'+a.length+'</b></div></div><div style="overflow:auto"><table class="gov-team-table"><thead><tr><th>'+(ar?'الموظف':'Employee')+'</th><th>'+(ar?'الرقم الوظيفي':'Employee ID')+'</th><th>'+(ar?'الخدمة':'Service')+'</th><th>'+(ar?'الجودة':'Quality')+'</th><th>'+(ar?'الرضا':'CSAT')+'</th><th>'+(ar?'الإنتاجية':'Productivity')+'</th><th>'+(ar?'التاريخ':'Date')+'</th></tr></thead><tbody>'+a.map(r=>'<tr><td>'+safe(r.name)+'</td><td>'+safe(r.employee_id||'—')+'</td><td>'+safe(r.service)+'</td><td><span class="'+cls(r.quality)+'" style="padding:4px 8px;border-radius:12px">'+Number(r.quality||0).toFixed(1)+'%</span></td><td><span class="'+cls(r.csat)+'" style="padding:4px 8px;border-radius:12px">'+Number(r.csat||0).toFixed(1)+'%</span></td><td>'+Number(r.prod||0).toLocaleString(ar?'ar-SA':'en-US')+'</td><td>'+safe(r.record_date||r.date||'—')+'</td></tr>').join('')+'</tbody></table></div></div>'}).join(''):'<p>'+(ar?'لا توجد بيانات مشرفين بعد. أدخل اسم المشرف عند إضافة السجل.':'No supervisor data yet. Enter a supervisor name when adding a record.')+'</p>');
+}
+install();window.addEventListener('governance:data-changed',()=>setTimeout(install,100));setInterval(install,5000);
+})();
