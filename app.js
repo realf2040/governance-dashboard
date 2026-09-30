@@ -13,6 +13,21 @@ async function api(url,opt={}){opt.headers={...(opt.headers||{}),'content-type':
 async function employee(){
  const name=$('dm-name'),sup=$('dm-supervisor'),date=$('dm-record-date'),service=$('dm-service');if(name){name.value=user;name.readOnly=true}if(date&&!date.value)date.value=new Date().toISOString().slice(0,10);
  try{const u=await api('/api/users'),me=(u.users||[]).find(x=>String(x.username).toLowerCase()===user.toLowerCase());if(me&&sup){sup.value=me.supervisor_username||'';sup.readOnly=true}}catch(e){}
+ const nav=document.querySelector('nav'),main=document.querySelector('main');if(nav&&main){
+  [...nav.querySelectorAll('button')].forEach(b=>{const k=b.dataset.tab||b.id||'';if(!['overview','data','gov-user-tools'].includes(k))b.hidden=true});
+  if(btn){btn.hidden=false;btn.textContent=ar?'تسجيل العمل':'Work Entry'}
+  const myBtn=document.createElement('button');myBtn.dataset.tab='mywork';myBtn.textContent=ar?'أعمالي':'My Work';nav.appendChild(myBtn);
+  const resBtn=document.createElement('button');resBtn.dataset.tab='myresults';resBtn.textContent=ar?'نتائجي':'My Results';nav.appendChild(resBtn);
+  const mySec=document.createElement('section');mySec.id='mywork';mySec.className='tab';main.appendChild(mySec);
+  const resSec=document.createElement('section');resSec.id='myresults';resSec.className='tab';main.appendChild(resSec);
+  const mine=()=>rows.filter(r=>String(r.savedBy||r.name).toLowerCase()===user.toLowerCase()||String(r.name).toLowerCase()===user.toLowerCase());
+  const color=v=>v<70?'#C62828':v<90?'#F9A825':'#2E7D32';
+  function drawMine(){const a=mine(),avg=k=>a.length?a.reduce((s,r)=>s+Number(r[k]||0),0)/a.length:0,q=avg('quality'),cs=avg('csat'),p=a.reduce((s,r)=>s+Number(r.prod||0),0);
+   mySec.innerHTML='<div class="card"><h2>'+(ar?'أعمالي':'My Work')+'</h2><div class="dm-scroll"><table><thead><tr><th>'+(ar?'التاريخ':'Date')+'</th><th>'+(ar?'نوع العمل':'Work Type')+'</th><th>'+(ar?'الجودة':'Quality')+'</th><th>'+(ar?'رضا العملاء':'CSAT')+'</th><th>'+(ar?'الإنتاجية':'Productivity')+'</th></tr></thead><tbody>'+(a.length?a.map(r=>'<tr><td>'+esc(r.record_date||r.date||'—')+'</td><td>'+esc(L(S,r.service))+'</td><td>'+Number(r.quality||0).toFixed(1)+'%</td><td>'+Number(r.csat||0).toFixed(1)+'%</td><td>'+Number(r.prod||0)+'</td></tr>').join(''):'<tr><td colspan="5">'+T.empty+'</td></tr>')+'</tbody></table></div></div>';
+   resSec.innerHTML='<div class="card"><h2>'+(ar?'نتائجي':'My Results')+'</h2><div style="display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px"><div class="kpi">'+(ar?'عدد الأعمال':'Work Records')+'<b>'+a.length+'</b></div><div class="kpi">'+(ar?'متوسط الجودة':'Average Quality')+'<b style="color:'+color(q)+'">'+q.toFixed(1)+'%</b></div><div class="kpi">'+(ar?'متوسط رضا العملاء':'Average CSAT')+'<b style="color:'+color(cs)+'">'+cs.toFixed(1)+'%</b></div><div class="kpi">'+(ar?'إجمالي الإنتاجية':'Total Productivity')+'<b>'+p+'</b></div></div><p style="margin-top:14px;font-weight:700">'+(ar?'الأداء التشغيلي محسوب آلياً من أعمالك. تقييم المشرف مستقل.':'Operational performance is calculated automatically from your work. Supervisor evaluation is separate.')+'</p></div>';
+  }
+  const open=s=>{document.querySelectorAll('nav button,.tab').forEach(x=>x.classList.remove('active'));document.querySelector('button[data-tab="'+s.id+'"]')?.classList.add('active');s.classList.add('active');if(s===mySec||s===resSec)drawMine()};myBtn.onclick=()=>open(mySec);resBtn.onclick=()=>open(resSec);window.addEventListener('governance:data-changed',drawMine);drawMine();
+ }
  const h=document.querySelector('#dm-form-card h2');if(h)h.textContent=ar?'تسجيل العمل اليومي':'Daily Work Entry';
  const p=document.querySelector('#dm-form-card p');if(p)p.textContent=ar?'اختر نوع العمل الذي قمت به، وستظهر المدخلات الخاصة به فقط.':'Select the work completed; only the relevant fields will appear.';
  const grid=$('dm-specific')?.querySelector('.dm-grid');if(grid&&!$('emp-work-details')){const box=document.createElement('div');box.id='emp-work-details';box.style.gridColumn='1/-1';grid.prepend(box)}
