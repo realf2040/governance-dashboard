@@ -7,9 +7,9 @@ function clean(body){
   const period=String(body.period??'').trim();
   const quality=Number(body.quality),csat=Number(body.csat),productivity=Number(body.productivity??body.prod);
   if(!employee_name||!allowedService.has(service)||!allowedPeriod.has(period)||!Number.isFinite(quality)||quality<0||quality>100||!Number.isFinite(csat)||csat<0||csat>100||!Number.isFinite(productivity)||productivity<0) return null;
-  const employee_id=String(body.employee_id??'').trim(),supervisor_name=String(body.supervisor_name??'').trim(),record_date=String(body.record_date??'').trim(),notes=String(body.notes??'').trim();
+  const employee_id=String(body.employee_id??'').trim(),supervisor_name=String(body.supervisor_name??'').trim(),record_date=String(body.record_date??'').trim(),notes=String(body.notes??'').trim(),service_metrics=JSON.stringify(body.service_metrics&&typeof body.service_metrics==='object'?body.service_metrics:{});
   if(employee_id.length>30||supervisor_name.length>80||notes.length>300||record_date.length>10)return null;
-  return {employee_name,employee_id,supervisor_name,record_date,notes,service,period,quality,csat,productivity:Math.round(productivity)};
+  return {employee_name,employee_id,supervisor_name,record_date,notes,service_metrics,service,period,quality,csat,productivity:Math.round(productivity)};
 }
 async function init(DB){
  await DB.prepare("CREATE TABLE IF NOT EXISTS governance_users (username TEXT PRIMARY KEY COLLATE NOCASE,password TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'user',active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)").run();
@@ -20,8 +20,9 @@ async function init(DB){
  try{await DB.prepare("ALTER TABLE governance_records ADD COLUMN supervisor_name TEXT DEFAULT ''").run()}catch(e){}
  try{await DB.prepare("ALTER TABLE governance_records ADD COLUMN record_date TEXT DEFAULT ''").run()}catch(e){}
  try{await DB.prepare("ALTER TABLE governance_records ADD COLUMN notes TEXT DEFAULT ''").run()}catch(e){}
+ try{await DB.prepare("ALTER TABLE governance_records ADD COLUMN service_metrics TEXT DEFAULT '{}'").run()}catch(e){}
 }
-function row(r){return {id:r.id,name:r.employee_name,employee_name:r.employee_name,employee_id:r.employee_id||'',supervisor_name:r.supervisor_name||'',record_date:r.record_date||'',notes:r.notes||'',service:r.service,period:r.period,quality:r.quality,csat:r.csat,prod:r.productivity,productivity:r.productivity,date:r.updated_at,created_at:r.created_at,updated_at:r.updated_at,savedBy:r.saved_by||'Admin'};}
+function row(r){return {id:r.id,name:r.employee_name,employee_name:r.employee_name,employee_id:r.employee_id||'',supervisor_name:r.supervisor_name||'',record_date:r.record_date||'',notes:r.notes||'',service_metrics:(()=>{try{return JSON.parse(r.service_metrics||'{}')}catch(e){return {}}})(),service:r.service,period:r.period,quality:r.quality,csat:r.csat,prod:r.productivity,productivity:r.productivity,date:r.updated_at,created_at:r.created_at,updated_at:r.updated_at,savedBy:r.saved_by||'Admin'};}
 async function audit(DB,u,a,id,d){await DB.prepare('INSERT INTO governance_audit(username,action,record_id,details) VALUES (?,?,?,?)').bind(u||'Admin',a,id||null,JSON.stringify(d||{})).run()}
 export default {
  async fetch(request,env){
@@ -40,19 +41,19 @@ export default {
    if(url.pathname==='/api/user-activity'&&request.method==='GET'){const name=String(url.searchParams.get('username')||'').trim();if(!name)return json({ok:false,error:'Username required'},400);const u=await env.DB.prepare('SELECT username,role,active,created_at,updated_at FROM governance_users WHERE username=?').bind(name).first();if(!u)return json({ok:false,error:'User not found'},404);const q=await env.DB.prepare('SELECT id,username,action,record_id,details,created_at FROM governance_audit WHERE username=? ORDER BY id DESC LIMIT 1000').bind(name).all();return json({ok:true,user:u,logs:q.results||[]})}
    if(!url.pathname.startsWith('/api/records')) return env.ASSETS.fetch(request);
    if(request.method==='GET'&&url.pathname==='/api/records'){
-    const q=await env.DB.prepare('SELECT id,employee_name,employee_id,supervisor_name,record_date,notes,service,period,quality,csat,productivity,created_at,updated_at,saved_by FROM governance_records ORDER BY id DESC').all();
+    const q=await env.DB.prepare('SELECT id,employee_name,employee_id,supervisor_name,record_date,notes,service_metrics,service,period,quality,csat,productivity,created_at,updated_at,saved_by FROM governance_records ORDER BY id DESC').all();
     return json({ok:true,records:(q.results||[]).map(row)});
    }
    if(request.method==='POST'&&url.pathname==='/api/records'){
     const b=await request.json(),v=clean(b); if(!v)return json({ok:false,error:'Invalid record'},400);const user=String(b.savedBy||'Admin');
-    const q=await env.DB.prepare('INSERT INTO governance_records (employee_name,employee_id,supervisor_name,record_date,notes,service,period,quality,csat,productivity,created_at,updated_at,saved_by) VALUES (?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?) RETURNING *').bind(v.employee_name,v.employee_id,v.supervisor_name,v.record_date,v.notes,v.service,v.period,v.quality,v.csat,v.productivity,user).first();await audit(env.DB,user,'CREATE',q.id,row(q));
+    const q=await env.DB.prepare('INSERT INTO governance_records (employee_name,employee_id,supervisor_name,record_date,notes,service_metrics,service,period,quality,csat,productivity,created_at,updated_at,saved_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?) RETURNING *').bind(v.employee_name,v.employee_id,v.supervisor_name,v.record_date,v.notes,v.service_metrics,v.service,v.period,v.quality,v.csat,v.productivity,user).first();await audit(env.DB,user,'CREATE',q.id,row(q));
     return json({ok:true,record:row(q)},201);
    }
    const m=url.pathname.match(/^\/api\/records\/(\d+)$/); if(!m)return json({ok:false,error:'Not found'},404);
    const id=Number(m[1]);
    if(request.method==='PUT'){
     const b=await request.json(),v=clean(b); if(!v)return json({ok:false,error:'Invalid record'},400);const user=String(b.savedBy||'Admin');
-    const q=await env.DB.prepare('UPDATE governance_records SET employee_name=?,employee_id=?,supervisor_name=?,record_date=?,notes=?,service=?,period=?,quality=?,csat=?,productivity=?,updated_at=CURRENT_TIMESTAMP,saved_by=? WHERE id=? RETURNING *').bind(v.employee_name,v.employee_id,v.supervisor_name,v.record_date,v.notes,v.service,v.period,v.quality,v.csat,v.productivity,user,id).first();if(q)await audit(env.DB,user,'UPDATE',id,row(q));
+    const q=await env.DB.prepare('UPDATE governance_records SET employee_name=?,employee_id=?,supervisor_name=?,record_date=?,notes=?,service_metrics=?,service=?,period=?,quality=?,csat=?,productivity=?,updated_at=CURRENT_TIMESTAMP,saved_by=? WHERE id=? RETURNING *').bind(v.employee_name,v.employee_id,v.supervisor_name,v.record_date,v.notes,v.service_metrics,v.service,v.period,v.quality,v.csat,v.productivity,user,id).first();if(q)await audit(env.DB,user,'UPDATE',id,row(q));
     return q?json({ok:true,record:row(q)}):json({ok:false,error:'Record not found'},404);
    }
    if(request.method==='DELETE'){
