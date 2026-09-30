@@ -28,6 +28,7 @@ async function employee(){
   }
   const open=s=>{document.querySelectorAll('nav button,.tab').forEach(x=>x.classList.remove('active'));document.querySelector('button[data-tab="'+s.id+'"]')?.classList.add('active');s.classList.add('active');if(s===mySec||s===resSec)drawMine()};myBtn.onclick=()=>open(mySec);resBtn.onclick=()=>open(resSec);window.addEventListener('governance:data-changed',drawMine);drawMine();
  }
+ const enforceEmployeeNav=()=>{const allowed=new Set(['overview','data','mywork','myresults']);document.querySelectorAll('nav button').forEach(b=>{const k=b.dataset.tab||'';const acct=b.id==='gov-user-tools';b.style.display=(allowed.has(k)||acct)?'':'none';if(k==='data')b.textContent=ar?'تسجيل العمل':'Work Entry';if(acct)b.textContent=ar?'الحساب':'Account'});};enforceEmployeeNav();const navObserver=new MutationObserver(enforceEmployeeNav);navObserver.observe(document.querySelector('nav'),{childList:true});
  const h=document.querySelector('#dm-form-card h2');if(h)h.textContent=ar?'تسجيل العمل اليومي':'Daily Work Entry';
  const p=document.querySelector('#dm-form-card p');if(p)p.textContent=ar?'اختر نوع العمل الذي قمت به، وستظهر المدخلات الخاصة به فقط.':'Select the work completed; only the relevant fields will appear.';
  const grid=$('dm-specific')?.querySelector('.dm-grid');if(grid&&!$('emp-work-details')){const box=document.createElement('div');box.id='emp-work-details';box.style.gridColumn='1/-1';grid.prepend(box)}
