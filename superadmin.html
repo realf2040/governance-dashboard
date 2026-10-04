@@ -69,7 +69,7 @@ function applyLang(){
  const brand=document.querySelector('.brand>div:last-child>div');if(brand)brand.textContent=ar?'لوحة السوبر أدمن':'Super Admin Console';
  const lh=document.querySelector('#login h2'),lp=document.querySelector('#login p');if(lh)lh.textContent=t.loginTitle;if(lp)lp.textContent=t.loginDesc;
  ph('lu','اسم المستخدم','Username');ph('lp','كلمة المرور','Password');txt('loginBtn','دخول','Login');
- const dh=document.querySelector('#dash>h2');if(dh)dh.textContent=ar?'لوحة تحكم السوبر أدمن':'Super Admin Dashboard';
+ const dh=document.querySelector('#dash>h2');if(dh){dh.textContent=ar?'لوحة تحكم السوبر أدمن':'Super Admin Dashboard';dh.dir=ar?'rtl':'ltr'}const stray=[...document.querySelectorAll('#dash h2')].find(x=>x!==dh&&x.textContent.includes('لوحة تحكم'));if(stray)stray.textContent=ar?'لوحة تحكم السوبر أدمن':'Super Admin Dashboard';
  const topCards=document.querySelector('#superDashboardPage>.cards');if(topCards){const cc=topCards.querySelectorAll(':scope>.card');if(cc[0])cc[0].childNodes[0].nodeValue=ar?'المستخدمون':'Users';if(cc[1])cc[1].childNodes[0].nodeValue=ar?'المستخدمون النشطون':'Active Users';if(cc[2])cc[2].childNodes[0].nodeValue=ar?'عمليات التغيير المسجلة':'Logged Changes'}
  txt('supCardLabel','المشرفون','Supervisors');txt('empCardLabel','الموظفون','Employees');txt('teamCardLabel','الارتباطات الإشرافية','Supervisor Assignments');txt('assignmentHint','موظفون مرتبطون بمشرف','Employees assigned to a supervisor');txt('addSupervisor','+ إضافة مشرف','+ Add Supervisor');txt('addEmployee','+ إضافة موظف','+ Add Employee');
  const panels=document.querySelectorAll('#superDashboardPage>.panel'),createPanel=panels[0],usersPanel=panels[1];
