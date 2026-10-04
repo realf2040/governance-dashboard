@@ -127,3 +127,17 @@ $('rp-upload').onclick=async()=>{const f=$('rp-file').files[0];if(!f){msg(ar?'ا
 $('rp-refresh').onclick=async()=>{await loadBase();await list()};$('rp-body').onclick=async e=>{const id=e.target.dataset.down,del=e.target.dataset.rdel;if(id){try{const j=await api('/api/reports/'+id),r=j.report;download('governance-report-'+id+'.json','application/json;charset=utf-8',JSON.stringify({title:r.title,type:r.report_type,owner:r.owner_username,created_at:r.created_at,...r.payload},null,2))}catch(x){msg(ar?'تعذر تحميل التقرير':'Could not download report')}}if(del&&confirm(ar?'هل تريد حذف هذا التقرير؟':'Delete this report?')){try{await api('/api/reports/'+del,{method:'DELETE'});msg(ar?'تم حذف التقرير':'Report deleted');await list()}catch(x){msg(ar?'تعذر حذف التقرير':'Could not delete report')}}};
 const openReports=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('main .tab').forEach(x=>{x.classList.remove('active');x.style.display=''});b.hidden=false;b.style.display='';b.classList.add('active');s.hidden=false;s.style.display='block';s.classList.add('active');s.scrollIntoView({behavior:'smooth',block:'start'});loadBase().catch(()=>{});list().catch(()=>{})};const bindReports=()=>{const r=nav.querySelector('button[data-tab="reports"]');if(!r)return;r.hidden=false;r.style.display='';r.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();openReports()}};bindReports();setTimeout(bindReports,250);setTimeout(bindReports,1000);window.__openGovernanceReports=openReports;loadBase();list();
 })();
+;(()=>{if(window.__govReportsEmergencyRoute)return;window.__govReportsEmergencyRoute=true;
+ document.addEventListener('click',function(e){
+  const btn=e.target&&e.target.closest?e.target.closest('nav button[data-tab="reports"]'):null;
+  if(!btn)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+  const sec=document.getElementById('reports');
+  if(!sec){alert(document.documentElement.lang==='ar'?'جاري تجهيز مركز التقارير، أعد تحميل الصفحة مرة واحدة.':'Reports Center is loading. Refresh once.');return}
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('main .tab').forEach(x=>{x.classList.remove('active');x.hidden=true;x.style.display='none'});
+  btn.hidden=false;btn.style.display='';btn.classList.add('active');
+  sec.hidden=false;sec.style.display='block';sec.classList.add('active');
+  sec.scrollIntoView({block:'start'});
+ },true);
+})();
