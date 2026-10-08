@@ -141,7 +141,7 @@ for(const sheetName of wb.SheetNames){
 if(!parsed)throw Error('Could not locate weekly Quality of Tickets columns. Check that Week, Tickets Monitored, Opening Accuracy, Closing Accuracy and Root Cause Selection Accuracy are present.');
 data=parsed;if(!data.length)throw Error('No usable rows');const s=summarize(data);document.getElementById('qaExcelStatus').textContent='Loaded '+data.length+' weeks from '+file.name;document.getElementById('qaExcelStats').innerHTML='<b>Tickets: '+s.tot.toLocaleString()+' | Opening: '+fmt(s.opening)+' | Closing: '+fmt(s.closing)+' | Root Cause: '+fmt(s.root)+'</b><ul>'+s.notes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';document.getElementById('qaExcelPpt').disabled=false;document.getElementById('qaExcelPdf').disabled=false}catch(err){data=null;document.getElementById('qaExcelStatus').textContent='Error: '+err.message;document.getElementById('qaExcelPpt').disabled=true;document.getElementById('qaExcelPdf').disabled=true}});
 
-const QA_COLORS={blue:'#103A72',purple:'#542080',pink:'#A51D65'};
+const QA_COLORS={blue:'#071F46',purple:'#542080',pink:'#D71920'};
 const qaEsc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const qaText=(x,y,t,size=22,color=QA_COLORS.blue,weight=500,anchor='start')=>'<text x="'+x+'" y="'+y+'" font-family="Arial, sans-serif" font-size="'+size+'" font-weight="'+weight+'" fill="'+color+'" text-anchor="'+anchor+'">'+qaEsc(t)+'</text>';
 const qaCircle=(x,y,r,p,color)=>{const circ=2*Math.PI*r;return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="'+QA_COLORS.purple+'" stroke-opacity=".12" stroke-width="18"/><circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="18" stroke-dasharray="'+(circ*Math.min(100,Math.max(0,p))/100)+' '+circ+'" transform="rotate(-90 '+x+' '+y+')" stroke-linecap="round"/>'};
@@ -177,7 +177,7 @@ document.getElementById('qaExcelPdf').onclick=async()=>{if(!data)return;await qa
 })();
 </script><script>
 (()=>{
-const colors=['#103A72','#542080','#A51D65'];
+const colors=['#071F46','#542080','#D71920'];
 const byId=id=>document.getElementById(id);
 const safe=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let source=[],fields=[],selected=[],sheetName='',fileName='';
@@ -186,10 +186,10 @@ const parseNumber=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;le
 const cellNumber=v=>{const p=parseNumber(v);return typeof p==='number'?p:p?.value??null};
 const mount=()=>{
  const parent=byId('superReportsPage');if(!parent||byId('universalExcelAnalyzer'))return;
- const section=document.createElement('section');section.id='universalExcelAnalyzer';section.style.cssText='background:#fff;border-top:5px solid #103A72;border-radius:14px;padding:22px;margin:18px 0;color:#103A72;border-left:1px solid #ddd;border-right:1px solid #ddd;border-bottom:1px solid #ddd';
+ const section=document.createElement('section');section.id='universalExcelAnalyzer';section.style.cssText='background:#fff;border-top:5px solid #071F46;border-radius:14px;padding:22px;margin:18px 0;color:#071F46;border-left:1px solid #ddd;border-right:1px solid #ddd;border-bottom:1px solid #ddd';
  section.innerHTML='<h2 style="color:#542080">Universal Excel Analyzer</h2><p>Upload an Excel workbook, select numeric indicators, and export matching PowerPoint and PDF reports. Existing Quality of Tickets reports remain unchanged.</p><input type="file" id="uxaFile" accept=".xlsx,.xls,.csv"><div id="uxaMessage" role="status" style="margin:12px 0;color:#542080"></div><div id="uxaFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px"></div><div style="margin:14px 0"><label for="uxaChart">Charts: </label><select id="uxaChart"><option value="auto">Automatic</option><option value="bar">Bar charts</option><option value="circle">Circular charts</option></select></div><button type="button" id="uxaPpt" disabled>PowerPoint</button> <button type="button" id="uxaPdf" disabled>PDF</button>';
  const old=byId('excelAnalyzer');if(old)old.insertAdjacentElement('afterend',section);else parent.appendChild(section);
- const jump=document.createElement('button');jump.type='button';jump.textContent='Universal Excel Analyzer';jump.style.cssText='margin:10px;padding:12px 18px;border:0;border-radius:9px;background:#103A72;color:white;font-weight:bold;cursor:pointer';jump.onclick=()=>section.scrollIntoView({behavior:'smooth'});const heading=byId('superReportsPageTitle');if(heading)heading.insertAdjacentElement('afterend',jump);
+ const jump=document.createElement('button');jump.type='button';jump.textContent='Universal Excel Analyzer';jump.style.cssText='margin:10px;padding:12px 18px;border:0;border-radius:9px;background:#071F46;color:white;font-weight:bold;cursor:pointer';jump.onclick=()=>section.scrollIntoView({behavior:'smooth'});const heading=byId('superReportsPageTitle');if(heading)heading.insertAdjacentElement('afterend',jump);
  const status=t=>byId('uxaMessage').textContent=t;
  const update=()=>{const enabled=source.length>0&&selected.length>0;byId('uxaPpt').disabled=!enabled;byId('uxaPdf').disabled=!enabled;};
  byId('uxaFile').onchange=async e=>{
