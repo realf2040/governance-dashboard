@@ -92,6 +92,12 @@ current=sessionStorage.getItem('superUser')||'';applyLang();if(current){$('login
 const panel=document.createElement('section');panel.id='excelAnalyzer';panel.style.cssText='margin-top:22px;padding:22px;border:1px solid #d9e0e8;border-top:5px solid #542080;border-radius:14px;background:white';
 panel.innerHTML='<h2>Excel Reports Analyzer</h2><p>Upload a weekly quality Excel file to create a two-slide executive PowerPoint and a two-page PDF. Analysis runs in your browser; uploading does not change operational records.</p><input id="qaExcelFile" type="file" accept=".xlsx,.xls,.csv" style="margin:12px 0"><div id="qaExcelStatus" role="status"></div><div id="qaExcelStats" style="margin:14px 0"></div><button type="button" id="qaExcelPpt" disabled>PowerPoint</button> <button type="button" id="qaExcelPdf" disabled>PDF</button>';
 reports.appendChild(panel);
+const page=document.getElementById('superReportsPage');
+if(page&&!document.getElementById('excelAnalyzerJump')){
+ const jump=document.createElement('button');jump.type='button';jump.id='excelAnalyzerJump';jump.textContent='Excel Reports Analyzer';jump.style.cssText='margin:10px 0 18px;padding:12px 20px;border:0;border-radius:9px;background:#542080;color:white;font-size:16px;font-weight:700;cursor:pointer';
+ jump.onclick=()=>panel.scrollIntoView({behavior:'smooth',block:'start'});
+ const heading=document.getElementById('superReportsPageTitle');if(heading)heading.insertAdjacentElement('afterend',jump);else page.prepend(jump);
+}
 let data=null;
 const num=v=>typeof v==='number'?v:Number(String(v??'').replace('%','').replace(/,/g,''))||0;
 const rate=v=>{const n=num(v);return n<=1?n*100:n};
