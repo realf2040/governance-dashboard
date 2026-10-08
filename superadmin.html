@@ -109,7 +109,7 @@ for(const sheetName of wb.SheetNames){
   const idx=patterns=>headers.findIndex(k=>patterns.some(p=>k.includes(p)));
   const wk=idx(['week']),tk=idx(['ticketsmonitored','tickets']),op=idx(['openingaccuracy','opening']),cl=idx(['closingaccuracy','closing']),rt=idx(['rootcauseselection','rootcause']);
   if([wk,tk,op,cl,rt].some(x=>x<0))continue;
-  const found=matrix.slice(h+1).filter(r=>/^w\\s*\\d+$/i.test(String(r[wk]??'').trim())).map(r=>({week:String(r[wk]).trim(),tickets:num(r[tk]),opening:rate(r[op]),closing:rate(r[cl]),root:rate(r[rt])}));
+  const found=matrix.slice(h+1).filter(r=>/^w\s*\d+$/i.test(String(r[wk]??'').trim())).map(r=>({week:String(r[wk]).trim(),tickets:num(r[tk]),opening:rate(r[op]),closing:rate(r[cl]),root:rate(r[rt])}));
   if(found.length){parsed=found;break}
  }
  if(parsed)break;
