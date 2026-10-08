@@ -175,4 +175,72 @@ document.getElementById('qaExcelPpt').onclick=async()=>{if(!data)return;await qa
 document.getElementById('qaExcelPdf').onclick=async()=>{if(!data)return;await qaExport('PDF',async()=>{if(!window.jspdf?.jsPDF)throw Error('PDF library not loaded');const images=await qaImages(),doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:[190.5,338.6667]});images.forEach((img,i)=>{if(i)doc.addPage();doc.addImage(img,'PNG',0,0,338.6667,190.5)});doc.save('Quality-of-Tickets-Executive.pdf')})};
 };if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(mount,0));else mount();
 })();
+</script><script>
+(()=>{
+const colors=['#103A72','#542080','#A51D65'];
+const byId=id=>document.getElementById(id);
+const safe=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+let source=[],fields=[],selected=[],sheetName='',fileName='';
+const normalize=v=>String(v??'').trim();
+const parseNumber=v=>{if(typeof v==='number')return Number.isFinite(v)?v:null;let t=normalize(v).replace(/,/g,'').replace(/٪/g,'%');if(!t)return null;const pct=t.endsWith('%');if(pct)t=t.slice(0,-1);if(!/^-?\d+(\.\d+)?$/.test(t))return null;return {value:Number(t),percent:pct}};
+const cellNumber=v=>{const p=parseNumber(v);return typeof p==='number'?p:p?.value??null};
+const mount=()=>{
+ const parent=byId('superReportsPage');if(!parent||byId('universalExcelAnalyzer'))return;
+ const section=document.createElement('section');section.id='universalExcelAnalyzer';section.style.cssText='background:#fff;border-top:5px solid #103A72;border-radius:14px;padding:22px;margin:18px 0;color:#103A72;border-left:1px solid #ddd;border-right:1px solid #ddd;border-bottom:1px solid #ddd';
+ section.innerHTML='<h2 style="color:#542080">Universal Excel Analyzer</h2><p>Upload an Excel workbook, select numeric indicators, and export matching PowerPoint and PDF reports. Existing Quality of Tickets reports remain unchanged.</p><input type="file" id="uxaFile" accept=".xlsx,.xls,.csv"><div id="uxaMessage" role="status" style="margin:12px 0;color:#542080"></div><div id="uxaFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px"></div><div style="margin:14px 0"><label for="uxaChart">Charts: </label><select id="uxaChart"><option value="auto">Automatic</option><option value="bar">Bar charts</option><option value="circle">Circular charts</option></select></div><button type="button" id="uxaPpt" disabled>PowerPoint</button> <button type="button" id="uxaPdf" disabled>PDF</button>';
+ const old=byId('excelAnalyzer');if(old)old.insertAdjacentElement('afterend',section);else parent.appendChild(section);
+ const jump=document.createElement('button');jump.type='button';jump.textContent='Universal Excel Analyzer';jump.style.cssText='margin:10px;padding:12px 18px;border:0;border-radius:9px;background:#103A72;color:white;font-weight:bold;cursor:pointer';jump.onclick=()=>section.scrollIntoView({behavior:'smooth'});const heading=byId('superReportsPageTitle');if(heading)heading.insertAdjacentElement('afterend',jump);
+ const status=t=>byId('uxaMessage').textContent=t;
+ const update=()=>{const enabled=source.length>0&&selected.length>0;byId('uxaPpt').disabled=!enabled;byId('uxaPdf').disabled=!enabled;};
+ byId('uxaFile').onchange=async e=>{
+  source=[];fields=[];selected=[];byId('uxaFields').innerHTML='';update();
+  const file=e.target.files[0];if(!file)return;fileName=file.name;
+  try{
+   if(!window.XLSX)throw Error('Excel reader unavailable');
+   const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+   let best=null;
+   for(const name of wb.SheetNames){const rows=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:true});for(let i=0;i<Math.min(rows.length,40);i++){
+    const header=rows[i]||[];const body=rows.slice(i+1).filter(row=>row.some(v=>normalize(v)!==''));
+    const numeric=header.map((h,col)=>{const nums=body.map(row=>cellNumber(row[col])).filter(v=>v!==null);return {col,label:normalize(h)||'Column '+(col+1),count:nums.length,ratio:nums.length/Math.max(1,body.length),percent:body.some(row=>String(row[col]??'').includes('%'))||/accuracy|rate|percent|satisfaction|quality|csat|نسبة|دقة|رضا/i.test(String(h))};}).filter(f=>f.count>=2&&f.ratio>=.55);
+    const labels=header.filter(h=>normalize(h)!=='').length;
+    const score=numeric.length*10+Math.min(body.length,100)/10+Math.min(labels,10);
+    if(numeric.length&&labels>=2&&(!best||score>best.score))best={rows:body,fields:numeric,name,score};
+   }}
+   if(!best)throw Error('No usable numeric table found. The file needs a header row and at least two numeric records.');
+   source=best.rows;fields=best.fields;sheetName=best.name;selected=fields.slice(0,4).map(f=>f.col);
+   byId('uxaFields').innerHTML=fields.map(f=>'<label style="padding:10px;border:1px solid #ddd;border-radius:8px;display:block"><input type="checkbox" data-col="'+f.col+'" '+(selected.includes(f.col)?'checked':'')+'> '+safe(f.label)+' <small style="color:#542080">('+f.count+' values)</small></label>').join('');
+   byId('uxaFields').querySelectorAll('input').forEach(input=>input.onchange=()=>{selected=[...byId('uxaFields').querySelectorAll('input:checked')].map(x=>Number(x.dataset.col));update()});
+   status('Detected '+fields.length+' numeric indicators in '+sheetName+'. Select the indicators to include.');update();
+  }catch(err){status('Excel analysis failed: '+err.message)}
+ };
+ const stats=col=>{const field=fields.find(f=>f.col===col),values=source.map(row=>cellNumber(row[col])).filter(v=>v!==null),sum=values.reduce((a,b)=>a+b,0),avg=sum/Math.max(1,values.length);const percent=field.percent||(values.length>0&&values.every(v=>v>=0&&v<=1)&&/accuracy|rate|percent|quality|csat|دقة|نسبة/i.test(field.label));const scale=percent&&values.every(v=>v>=0&&v<=1)?100:1;return {label:field.label,values:values.map(v=>v*scale),avg:avg*scale,sum:sum*scale,percent,count:values.length,min:Math.min(...values)*scale,max:Math.max(...values)*scale}};
+ const makeSvg=(items,page,total)=>{
+  const out=['<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="1280" height="720" fill="white"/>'];
+  const txt=(x,y,t,size=22,color=colors[0],weight=500,anchor='start')=>'<text x="'+x+'" y="'+y+'" font-family="Arial" font-size="'+size+'" font-weight="'+weight+'" text-anchor="'+anchor+'" fill="'+color+'">'+safe(t)+'</text>';
+  out.push(txt(48,60,'GOVERNANCE DASHBOARD EBU',30,colors[0],700),txt(48,96,'UNIVERSAL EXCEL ANALYZER  |  '+safe(sheetName),18,colors[1],600));
+  const positions=[[50,144],[660,144],[50,420],[660,420]];
+  items.forEach((m,i)=>{
+   const [x,y]=positions[i],color=colors[i%3],mode=byId('uxaChart').value;
+   out.push(txt(x,y,String((page-1)*4+i+1).padStart(2,'0')+'  '+m.label.slice(0,36),21,colors[1],700));
+   const format=v=>Number(v).toLocaleString('en-US',{maximumFractionDigits:1})+(m.percent?'%':'');
+   out.push(txt(x,y+60,format(m.percent?m.avg:m.sum),42,color,700),txt(x,y+89,m.percent?'Average percentage':'Total value',17,colors[0]));
+   const circle=mode==='circle'||(mode==='auto'&&m.percent);
+   if(circle){const p=Math.min(100,Math.max(0,m.avg)),circ=2*Math.PI*55;out.push('<circle cx="'+(x+98)+'" cy="'+(y+179)+'" r="55" stroke="'+colors[1]+'" stroke-opacity=".12" stroke-width="15" fill="none"/><circle cx="'+(x+98)+'" cy="'+(y+179)+'" r="55" stroke="'+color+'" stroke-width="15" fill="none" stroke-dasharray="'+(circ*p/100)+' '+circ+'" transform="rotate(-90 '+(x+98)+' '+(y+179)+')"/>',txt(x+98,y+187,p.toFixed(1)+'%',21,colors[0],700,'middle'))}
+   else{const vals=m.values.slice(-12),max=Math.max(1,...vals.map(v=>Math.abs(v)));vals.forEach((v,j)=>{const h=Math.min(100,Math.abs(v)/max*100);out.push('<rect x="'+(x+j*39)+'" y="'+(y+229-h)+'" width="25" height="'+h+'" rx="3" fill="'+colors[j%3]+'"/>')});}
+   out.push(txt(x+255,y+164,'Records: '+m.count,18,colors[0]),txt(x+255,y+195,'Average: '+format(m.avg),18,colors[2]));
+  });
+  out.push(txt(48,693,'SOURCE: '+fileName.slice(0,65),15,colors[1]),txt(1210,693,page+' / '+total,17,colors[2],700,'end'),'</svg>');return out.join('');
+ };
+ const imageFromSvg=svg=>new Promise((resolve,reject)=>{const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'})),img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');c.width=1280;c.height=720;c.getContext('2d').drawImage(img,0,0);URL.revokeObjectURL(url);resolve(c.toDataURL('image/png'))}catch(e){reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Chart rendering failed'))};img.src=url});
+ const exportReport=async kind=>{const ppt=byId('uxaPpt'),pdf=byId('uxaPdf');ppt.disabled=true;pdf.disabled=true;status('Preparing '+kind+'...');try{
+  const items=selected.map(stats),pages=[];for(let i=0;i<items.length;i+=4)pages.push(items.slice(i,i+4));
+  const images=[];for(let i=0;i<pages.length;i++)images.push(await imageFromSvg(makeSvg(pages[i],i+1,pages.length)));
+  if(kind==='PowerPoint'){if(typeof PptxGenJS==='undefined')throw Error('PowerPoint library unavailable');const deck=new PptxGenJS();deck.layout='LAYOUT_WIDE';images.forEach(image=>deck.addSlide().addImage({data:image,x:0,y:0,w:13.3333,h:7.5}));await deck.writeFile({fileName:'Universal-Excel-Report.pptx'})}
+  else{if(!window.jspdf?.jsPDF)throw Error('PDF library unavailable');const doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:[190.5,338.6667]});images.forEach((image,i)=>{if(i)doc.addPage();doc.addImage(image,'PNG',0,0,338.6667,190.5)});doc.save('Universal-Excel-Report.pdf')}
+  status(kind+' report created successfully.');
+ }catch(err){status(kind+' export failed: '+err.message);alert(kind+' export failed: '+err.message)}finally{update()}};
+ byId('uxaPpt').onclick=()=>exportReport('PowerPoint');byId('uxaPdf').onclick=()=>exportReport('PDF');
+};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+})();
 </script></body></html>
